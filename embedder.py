@@ -10,7 +10,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
 
 
-def get_embedding(text):
-    response = client.embeddings.create(input=text, model="text-embedding-3-small")
-    embedding = response.data[0].embedding
-    return embedding
+def get_embeddings_batch(texts):
+    response = client.embeddings.create(input=texts, model="text-embedding-3-small")
+    embeddings = [item.embedding for item in response.data]
+    return embeddings
