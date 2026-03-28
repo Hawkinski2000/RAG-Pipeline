@@ -7,12 +7,12 @@ wiki = wikipediaapi.Wikipedia(
 )
 
 
-def crawl(seed, max_articles=200):
+def crawl(seed, max_links=200):
     seed_page = wiki.page(seed)
-    links = list(seed_page.links.keys())[:max_articles]
+    links = list(seed_page.links.keys())[:max_links]
     corpus = [{"title": seed, "text": seed_page.text}]
 
-    for title in tqdm(links, desc="Crawling Wikipedia", unit="articles"):
+    for title in tqdm(links, desc="Crawling Wikipedia", unit="links"):
         page = wiki.page(title)
         if not page.exists():
             continue
