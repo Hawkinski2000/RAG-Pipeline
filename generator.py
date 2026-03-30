@@ -16,3 +16,15 @@ def generate_response(query, relevant_chunks):
     response = client.responses.create(model="gpt-5.4", input=prompt)
 
     return response
+
+
+def generate_query_answer(query):
+    prompt = (
+        "Generate a concise, factual answer to the following question as it "
+        "might appear in a Wikipedia article about large language models. "
+        "Use precise technical terminology and avoid speculation."
+        "\n\nQuestion:\n" + query
+    )
+    response = client.responses.create(model="gpt-5.4", input=prompt)
+
+    return response

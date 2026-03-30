@@ -5,7 +5,7 @@ from crawler import crawl
 from chunker import split_text
 from embedder import get_embeddings_batch
 from retriever import query_documents
-from generator import generate_response
+from generator import generate_response, generate_query_answer
 
 
 VECTOR_SIZE = 1536
@@ -25,7 +25,7 @@ def main():
     corpus = crawl(seed="Large_language_model", max_links=20)
 
     point_id = 0
-    pbar = tqdm(corpus, desc="Generating embeddings", unit="page")
+    pbar = tqdm(corpus, desc="Generating embeddings", unit="pages")
     for page in pbar:
         chunks = split_text(page["text"])
         embeddings = get_embeddings_batch(chunks)
@@ -43,12 +43,16 @@ def main():
         point_id += len(chunks)
 
     while True:
-        query = input("Enter a question: ")
-        relevant_chunks = query_documents(query, client)
+        query = input("\nEnter a question: ")
+
+        query_answer = generate_query_answer(query).output_text
+        expanded_query = f"{query}\n{query_answer}"
+
+        relevant_chunks = query_documents(expanded_query, client)
 
         response = generate_response(query, relevant_chunks)
 
-        print(f"{response.output_text}\n")
+        print(f"Answer: {response.output_text}")
 
 
 if __name__ == "__main__":
