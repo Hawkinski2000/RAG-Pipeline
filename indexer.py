@@ -9,7 +9,7 @@ from embedder import get_embeddings_batch
 VECTOR_SIZE = 1536
 
 
-def build_index(client: QdrantClient, seed, max_links=None):
+def build_index(client: QdrantClient, openai_client, seed, max_links=None):
     if client.collection_exists("rag-pipeline"):
         return
 
@@ -23,7 +23,7 @@ def build_index(client: QdrantClient, seed, max_links=None):
     point_id = 0
     for page in tqdm(corpus, desc="Generating embeddings", unit="pages"):
         chunks = split_text(page["text"])
-        embeddings = get_embeddings_batch(chunks)
+        embeddings = get_embeddings_batch(chunks, openai_client)
         points = [
             PointStruct(
                 id=point_id + i,

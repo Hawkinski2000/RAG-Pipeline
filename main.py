@@ -1,4 +1,9 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from qdrant_client import QdrantClient
+from openai import OpenAI
 from indexer import build_index
 from retriever import query_documents
 from reranker import rerank_chunks
@@ -12,18 +17,19 @@ TOP_N = 3
 
 def main():
     client = QdrantClient(url="http://localhost:6333")
-    build_index(client, seed="Large_language_model", max_links=MAX_LINKS)
+    openai_client = OpenAI()
+    build_index(client, openai_client, seed="Large_language_model", max_links=MAX_LINKS)
 
     while True:
         query = input("Enter a question: ")
 
-        query_answer = generate_query_answer(query).output_text
+        query_answer = generate_query_answer(query, openai_client).output_text
         expanded_query = f"{query}\n{query_answer}"
 
         relevant_chunks = query_documents(expanded_query, client, TOP_K)
         reranked_chunks = rerank_chunks(query, relevant_chunks, TOP_N)
 
-        response = generate_response(query, reranked_chunks)
+        response = generate_response(query, reranked_chunks, openai_client)
         print(f"Answer: {response.output_text}\n")
 
 
