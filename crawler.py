@@ -9,7 +9,7 @@ wiki = wikipediaapi.Wikipedia(
 
 def crawl(seed, max_links=200):
     seed_page = wiki.page(seed)
-    links = list(seed_page.links.keys())[:max_links]
+    links = list(seed_page.links.keys())[: max_links - 1]
     corpus = [{"title": seed, "text": seed_page.text}]
 
     for title in tqdm(links, desc="Crawling Wikipedia", unit="links"):

@@ -1,0 +1,8 @@
+{
+  "name": "wiki_eval_v2",
+  "seed": "Large_language_model",
+  "num_pages": 200,
+  "num_examples": 200,
+  "total_chunks": 4815,
+  "avg_chunks_per_page": 24.1
+}

@@ -6,6 +6,7 @@ from tqdm import tqdm
 from crawler import crawl
 from chunker import split_text
 from .prompts.qa_generation import build_qa_prompt
+from .tools import generate_qa_pair_tool
 
 
 MAX_LINKS = 200
@@ -59,37 +60,13 @@ def generate_dataset(seed, max_links):
 
             prompt = build_qa_prompt(chunks[:50])
 
-            for attempt in range(5):
-                response = openai_client.responses.create(
-                    model=MODEL,
-                    input=prompt,
-                    max_output_tokens=MAX_OUTPUT_TOKENS,
-                )
-
-                raw = response.output_text
-
-                try:
-                    data = json.loads(raw)
-                    break
-                except json.JSONDecodeError as e:
-                    print(f"[JSON retry {attempt+1}/5] Bad JSON:", e)
-                    print("Raw output:", raw)
-            else:
-                print("Failed to parse JSON after 5 attempts, skipping page.")
-                continue
-
-            if not isinstance(data, dict):
-                print("Model returned non-dict, skipping page.")
-                continue
-
-            required_keys = {"chunk_index", "question", "answer"}
-            if not required_keys.issubset(data):
-                print("Missing key(s) in response, skipping page.")
-                continue
-
-            chunk_index = data["chunk_index"]
-            question = data["question"]
-            answer = data["answer"]
+            response = openai_client.responses.create(
+                model=MODEL,
+                input=prompt,
+                tools=[generate_qa_pair_tool],
+                tool_choice={"type": "function", "name": "generate_qa_pair"},
+                max_output_tokens=MAX_OUTPUT_TOKENS,
+            )
 
             input_tokens = response.usage.input_tokens
             output_tokens = response.usage.output_tokens
@@ -99,15 +76,23 @@ def generate_dataset(seed, max_links):
             total_cost += page_cost
             tqdm.write(f"  Total cost: ${total_cost:.4f}")
 
-            if chunk_index < 0 or chunk_index >= len(chunks):
-                continue
+            arguments = response.output[0].arguments
+            args = json.loads(arguments)
+
+            chunk_indices = args["chunk_indices"]
+            question = args["question"]
+            answer = args["answer"]
+
+            for chunk_index in chunk_indices:
+                if chunk_index < 0 or chunk_index >= len(chunks):
+                    continue
 
             row = {
                 "title": page["title"],
-                "chunk_index": chunk_index,
+                "chunk_indices": chunk_indices,
                 "question": question,
                 "answer": answer,
-                "chunk_text": chunks[chunk_index],
+                "chunks": [chunks[i] for i in chunk_indices],
             }
 
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
