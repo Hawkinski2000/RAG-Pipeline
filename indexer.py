@@ -28,7 +28,7 @@ def build_index(client: QdrantClient, openai_client, seed, max_links=None):
             PointStruct(
                 id=point_id + i,
                 vector=embeddings[i],
-                payload={"text": chunks[i], "title": page["title"]},
+                payload={"text": chunks[i], "title": page["title"], "chunk_index": i},
             )
             for i in range(len(chunks))
         ]

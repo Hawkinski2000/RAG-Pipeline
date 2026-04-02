@@ -26,7 +26,7 @@ def main():
         query_answer = generate_query_answer(query, openai_client).output_text
         expanded_query = f"{query}\n{query_answer}"
 
-        relevant_chunks = query_documents(expanded_query, client, TOP_K)
+        relevant_chunks = query_documents(expanded_query, client, openai_client, TOP_K)
         reranked_chunks = rerank_chunks(query, relevant_chunks, TOP_N)
 
         response = generate_response(query, reranked_chunks, openai_client)
