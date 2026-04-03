@@ -22,10 +22,15 @@ def generate_response(query, relevant_chunks, openai_client):
 
 def generate_query_answer(query, openai_client):
     prompt = (
-        "Generate a concise, factual answer to the following question as it "
-        "might appear in a Wikipedia article about large language models. "
-        "Use precise technical terminology and avoid speculation."
-        "\n\nQuestion:\n" + query
+        "Generate a concise hypothetical answer to the question as it might "
+        "appear in a Wikipedia article about large language models.\n\n"
+        "Constraints:\n"
+        "- 1 to 4 sentences only\n"
+        "- Be factual and information-dense\n"
+        "- No filler, no repetition\n"
+        "- Use precise technical terminology\n"
+        "- Do NOT explain or add meta commentary\n\n"
+        "Question:\n" + query
     )
     response = openai_client.responses.create(
         model=MODEL, input=prompt, max_output_tokens=MAX_OUTPUT_TOKENS

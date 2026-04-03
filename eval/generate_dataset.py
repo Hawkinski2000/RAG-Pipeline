@@ -15,7 +15,6 @@ PRICING = {"input": 0.20, "output": 1.25}
 MAX_OUTPUT_TOKENS = 500
 
 load_dotenv()
-openai_client = OpenAI()
 
 
 def get_next_dataset_path():
@@ -43,9 +42,10 @@ def get_next_dataset_path():
 
 def generate_dataset(seed, max_links):
     dataset_path, dataset_name = get_next_dataset_path()
-
     data_path = os.path.join(dataset_path, "data.jsonl")
     meta_path = os.path.join(dataset_path, "meta.json")
+
+    openai_client = OpenAI()
 
     corpus = crawl(seed=seed, max_links=max_links)
 
