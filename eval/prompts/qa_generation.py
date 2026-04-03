@@ -2,18 +2,19 @@ def build_qa_prompt(chunks):
     formatted_chunks = "\n\n".join(f"[{i}] {chunk}" for i, chunk in enumerate(chunks))
 
     return f"""
-You are generating a high-quality question-answer pair dataset for retrieval evaluation.
+You are generating a high-quality question-answer dataset for retrieval evaluation.
 
-Each item is based on ONE OR MORE chunks from a single page.
+Each example is based on ONE OR MORE chunks from a single Wikipedia page.
 
 Task:
-1. Select one or more chunk indices from the list.
+1. Select ALL chunks that contain information needed to fully answer the question.
 2. Write a natural question that can be answered using those chunks.
 3. Write a correct answer supported ONLY by the selected chunks.
 
 Rules:
 - You MUST choose valid indices from 0 to {len(chunks)-1}.
-- You MAY use multiple chunks if needed.
+- You SHOULD include all chunks that are relevant, even if partially relevant.
+- Multi-chunk answers are preferred when information is distributed across sections.
 - Do NOT use outside knowledge.
 - Do NOT include irrelevant chunks.
 - The answer must be fully supported by the selected chunks only.
@@ -21,15 +22,12 @@ Rules:
 - Keep the answer concise (1–4 sentences).
 
 Question quality:
-- Prefer "why", "how", or conceptual questions.
-- The question should feel like something a user might naturally ask.
-- Avoid copying phrases directly from the chunks.
-- The question can require combining information across chunks.
+- Prefer "how", "why", or explanatory questions.
+- The question should require combining information across multiple chunks when possible.
+- Avoid overly narrow factual questions unless the page is simple.
 
 Important:
-- Only include chunks that are truly necessary to answer the question.
-
-Call the function with your result.
+- It is better to include an extra relevant chunk than to omit one.
 
 Chunks:
 {formatted_chunks}
