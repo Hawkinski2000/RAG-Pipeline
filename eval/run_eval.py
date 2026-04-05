@@ -11,11 +11,14 @@ from tqdm import tqdm
 from retriever import query_documents
 from reranker import rerank_chunks
 from generator import generate_response, generate_query_answer
+from .prompts.faithfulness import build_faithfulness_prompt
 
 
 DATASET_FOLDER = "wiki_eval_v3"
 TOP_K = 20
 TOP_N = 3
+MODEL = "gpt-5.4-nano"
+MAX_OUTPUT_TOKENS = 500
 
 
 def get_next_experiment_path():
@@ -58,6 +61,24 @@ def compute_metrics(chunks, gt_set):
         "hit": hit,
         "mrr": mrr,
     }
+
+
+def compute_faithfulness(query, answer, chunks, client):
+    context = "\n\n".join(f"[{i}] {chunk['text']}" for i, chunk in enumerate(chunks))
+
+    prompt = build_faithfulness_prompt(query, answer, chunks)
+
+    response = client.responses.create(
+        model=MODEL,
+        input=prompt,
+        max_output_tokens=MAX_OUTPUT_TOKENS,
+    )
+
+    try:
+        result = json.loads(response.output_text)
+        return result
+    except:
+        return {"faithful": False, "score": 0.0, "explanation": "parse error"}
 
 
 def run_eval(num_examples, description):
@@ -106,15 +127,15 @@ def run_eval(num_examples, description):
             )
             reranked_chunks = rerank_chunks(query, retrieved_chunks, TOP_N)
 
-            retrieved_set = set(
-                (chunk["title"], chunk["chunk_index"]) for chunk in retrieved_chunks
-            )
-            reranked_set = set(
-                (chunk["title"], chunk["chunk_index"]) for chunk in reranked_chunks
-            )
-
             retrieved_metrics = compute_metrics(retrieved_chunks, gt_set)
             reranked_metrics = compute_metrics(reranked_chunks, gt_set)
+
+            response = generate_response(query, reranked_chunks, openai_client)
+
+            answer = response.output_text
+            faithfulness = compute_faithfulness(
+                query, answer, reranked_chunks, openai_client
+            )
 
             results.append(
                 {
@@ -126,6 +147,7 @@ def run_eval(num_examples, description):
                     "recall_n": reranked_metrics["recall"],
                     "hit_n": reranked_metrics["hit"],
                     "mrr_n": reranked_metrics["mrr"],
+                    "faithfulness": faithfulness["score"],
                 }
             )
 
@@ -137,20 +159,19 @@ def run_eval(num_examples, description):
                     "chunk_indices": example["chunk_indices"],
                 },
                 "retrieved_chunks": [
-                    {"title": c["title"], "chunk_index": c["chunk_index"]}
-                    for c in retrieved_chunks
+                    {"title": chunk["title"], "chunk_index": chunk["chunk_index"]}
+                    for chunk in retrieved_chunks
                 ],
                 "reranked_chunks": [
-                    {"title": c["title"], "chunk_index": c["chunk_index"]}
-                    for c in reranked_chunks
+                    {"title": chunk["title"], "chunk_index": chunk["chunk_index"]}
+                    for chunk in reranked_chunks
                 ],
+                "answer": answer,
+                "faithfulness": faithfulness,
             }
 
             trace_file.write(json.dumps(trace_row) + "\n")
             trace_file.flush()
-
-            # response = generate_response(query, reranked_chunks, openai_client)
-            # print(f"Answer: {response.output_text}\n")
 
         trace_file.close()
 
