@@ -1,0 +1,19 @@
+{
+  "experiment": "exp_1",
+  "dataset": "wiki_eval_v3",
+  "num_examples": null,
+  "description": "baseline",
+  "top_k": 20,
+  "top_n": 3,
+  "summary": {
+    "precision_k": 0.17875,
+    "recall_k": 0.9058133116883117,
+    "hit_k": 1.0,
+    "mrr_k": 0.8950441176470588,
+    "precision_n": 0.665,
+    "recall_n": 0.5956612554112555,
+    "hit_n": 0.98,
+    "mrr_n": 0.9091666666666667,
+    "faithfulness": 0.77515
+  }
+}
