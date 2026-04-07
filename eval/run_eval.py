@@ -12,6 +12,7 @@ from retriever import query_documents
 from reranker import rerank_chunks
 from generator import generate_response, generate_query_answer
 from .prompts.faithfulness import build_faithfulness_prompt
+from .tools import compute_faithfulness_tool
 
 
 DATASET_FOLDER = "wiki_eval_v3"
@@ -63,20 +64,21 @@ def compute_metrics(chunks, gt_set):
     }
 
 
-def compute_faithfulness(query, answer, chunks, client):
+def compute_faithfulness(query, answer, chunks, openai_client):
     prompt = build_faithfulness_prompt(query, answer, chunks)
 
-    response = client.responses.create(
+    response = openai_client.responses.create(
         model=MODEL,
         input=prompt,
+        tools=[compute_faithfulness_tool],
+        tool_choice={"type": "function", "name": "compute_faithfulness"},
         max_output_tokens=MAX_OUTPUT_TOKENS,
     )
 
-    try:
-        result = json.loads(response.output_text)
-        return result
-    except:
-        return {"faithful": False, "score": 0.0, "explanation": "parse error"}
+    arguments = response.output[0].arguments
+    args = json.loads(arguments)
+
+    return args
 
 
 def run_eval(num_examples, description):
