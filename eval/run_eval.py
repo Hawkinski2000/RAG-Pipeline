@@ -184,7 +184,7 @@ def run_eval(num_examples, description):
     exp_results = {
         "experiment": exp_name,
         "dataset": DATASET_FOLDER,
-        "num_examples": num_examples,
+        "num_examples": num_examples or total,
         "description": description,
         "top_k": TOP_K,
         "top_n": TOP_N,
