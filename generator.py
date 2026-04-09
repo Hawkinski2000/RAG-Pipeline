@@ -1,3 +1,6 @@
+import time
+
+
 MODEL = "gpt-5.4-nano"
 MAX_OUTPUT_TOKENS = 500
 
@@ -13,11 +16,17 @@ def generate_response(query, relevant_chunks, openai_client):
         "sentences maximum and keep the answer concise."
         "\n\nContext:\n" + context + "\n\nQuestion:\n" + query
     )
-    response = openai_client.responses.create(
-        model=MODEL, input=prompt, max_output_tokens=MAX_OUTPUT_TOKENS
-    )
 
-    return response
+    while True:
+        try:
+            response = openai_client.responses.create(
+                model=MODEL, input=prompt, max_output_tokens=MAX_OUTPUT_TOKENS
+            )
+            return response
+
+        except Exception as e:
+            print(f"retrying generate_response ({e})")
+            time.sleep(1)
 
 
 def generate_query_answer(query, openai_client):
@@ -32,8 +41,14 @@ def generate_query_answer(query, openai_client):
         "- Do NOT explain or add meta commentary\n\n"
         "Question:\n" + query
     )
-    response = openai_client.responses.create(
-        model=MODEL, input=prompt, max_output_tokens=MAX_OUTPUT_TOKENS
-    )
 
-    return response
+    while True:
+        try:
+            response = openai_client.responses.create(
+                model=MODEL, input=prompt, max_output_tokens=MAX_OUTPUT_TOKENS
+            )
+            return response
+
+        except Exception as e:
+            print(f"retrying generate_query_answer ({e})")
+            time.sleep(1)

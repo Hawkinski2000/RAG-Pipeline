@@ -5,6 +5,7 @@ load_dotenv()
 import json
 import os
 import argparse
+import time
 from qdrant_client import QdrantClient
 from openai import OpenAI
 from tqdm import tqdm
@@ -67,18 +68,24 @@ def compute_metrics(chunks, gt_set):
 def compute_faithfulness(query, answer, chunks, openai_client):
     prompt = build_faithfulness_prompt(query, answer, chunks)
 
-    response = openai_client.responses.create(
-        model=MODEL,
-        input=prompt,
-        tools=[compute_faithfulness_tool],
-        tool_choice={"type": "function", "name": "compute_faithfulness"},
-        max_output_tokens=MAX_OUTPUT_TOKENS,
-    )
+    while True:
+        try:
+            response = openai_client.responses.create(
+                model=MODEL,
+                input=prompt,
+                tools=[compute_faithfulness_tool],
+                tool_choice={"type": "function", "name": "compute_faithfulness"},
+                max_output_tokens=MAX_OUTPUT_TOKENS,
+            )
 
-    arguments = response.output[0].arguments
-    args = json.loads(arguments)
+            arguments = response.output[0].arguments
+            args = json.loads(arguments)
 
-    return args
+            return args
+
+        except Exception as e:
+            print(f"retrying compute_faithfulness ({e})")
+            time.sleep(1)
 
 
 def run_eval(num_examples, description):
@@ -119,13 +126,12 @@ def run_eval(num_examples, description):
             gt_title = example["title"]
             gt_set = set((gt_title, idx) for idx in example["chunk_indices"])
 
-            # query_answer = generate_query_answer(query, openai_client).output_text
-            # expanded_query = f"{query}\n{query_answer}"
+            query_answer = generate_query_answer(query, openai_client).output_text
+            expanded_query = f"{query}\n{query_answer}"
 
-            # retrieved_chunks = query_documents(
-            #     expanded_query, client, openai_client, TOP_K
-            # )
-            retrieved_chunks = query_documents(query, client, openai_client, TOP_K)
+            retrieved_chunks = query_documents(
+                expanded_query, client, openai_client, TOP_K
+            )
             reranked_chunks = rerank_chunks(query, retrieved_chunks, TOP_N)
 
             retrieved_metrics = compute_metrics(retrieved_chunks, gt_set)
@@ -154,7 +160,7 @@ def run_eval(num_examples, description):
 
             trace_row = {
                 "query": query,
-                # "expanded_query": expanded_query,
+                "expanded_query": expanded_query,
                 "gt": {
                     "title": example["title"],
                     "chunk_indices": example["chunk_indices"],
