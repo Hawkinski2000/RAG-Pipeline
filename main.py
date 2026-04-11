@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import argparse
 from qdrant_client import QdrantClient
 from openai import OpenAI
 from indexer import build_index
@@ -16,9 +17,17 @@ TOP_N = 3
 
 
 def main():
+    parser = argparse.ArgumentParser(description="RAG pipeline")
+    parser.add_argument("--reindex", action="store_true")
+    args = parser.parse_args()
+
     client = QdrantClient(url="http://localhost:6333")
     openai_client = OpenAI()
-    build_index(client, openai_client, seed="Large_language_model", max_links=MAX_LINKS)
+
+    if args.reindex:
+        build_index(
+            client, openai_client, seed="Large_language_model", max_links=MAX_LINKS
+        )
 
     while True:
         query = input("Enter a question: ")
