@@ -25,6 +25,9 @@ def main():
     openai_client = OpenAI()
 
     if args.reindex:
+        if client.collection_exists("rag-pipeline"):
+            client.delete_collection("rag-pipeline")
+
         build_index(
             client, openai_client, seed="Large_language_model", max_links=MAX_LINKS
         )
