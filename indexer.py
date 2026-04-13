@@ -6,7 +6,7 @@ from chunker import split_text
 from embedder import get_embeddings_batch
 
 
-VECTOR_SIZE = 1536
+VECTOR_SIZE = 3072
 
 
 def build_index(client: QdrantClient, openai_client, seed, max_links=None):
