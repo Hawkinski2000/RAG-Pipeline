@@ -96,7 +96,7 @@ def run_eval(num_examples, description):
     trace_file = open(trace_path, "a", encoding="utf-8")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    datasets_dir = os.path.join(script_dir, f"datasets/{DATASET_FOLDER}")
+    datasets_dir = os.path.join(script_dir, "datasets", DATASET_FOLDER)
 
     client = QdrantClient(url="http://localhost:6333")
     openai_client = OpenAI()
