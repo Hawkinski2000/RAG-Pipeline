@@ -22,13 +22,19 @@ def get_next_dataset_path():
     datasets_dir = os.path.join(script_dir, "datasets")
     os.makedirs(datasets_dir, exist_ok=True)
 
-    existing = [d for d in os.listdir(datasets_dir) if d.startswith("wiki_eval_v")]
+    existing_dirs = [
+        dir_name
+        for dir_name in os.listdir(datasets_dir)
+        if dir_name.startswith("wiki_eval_v")
+    ]
 
-    if not existing:
+    if not existing_dirs:
         version = 1
     else:
         versions = [
-            int(d.split("_v")[-1]) for d in existing if d.split("_v")[-1].isdigit()
+            int(dir_name.split("_v")[-1])
+            for dir_name in existing_dirs
+            if dir_name.split("_v")[-1].isdigit()
         ]
         version = max(versions) + 1
 
@@ -53,7 +59,7 @@ def generate_dataset(seed, max_links):
     total_chunks = 0
     total_cost = 0.0
 
-    with open(data_path, "a", encoding="utf-8") as f:
+    with open(data_path, "w", encoding="utf-8") as f:
         for page in tqdm(corpus, desc="Generating dataset", unit="pages"):
             chunks = split_text(page["text"])
             total_chunks += len(chunks)
