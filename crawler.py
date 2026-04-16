@@ -38,6 +38,8 @@ def get_next_corpus_path():
 
 
 def crawl(seed, max_links):
+    print("Building corpus...")
+
     corpus_path, corpus_name = get_next_corpus_path()
     data_path = os.path.join(corpus_path, "data.jsonl")
     meta_path = os.path.join(corpus_path, "meta.json")

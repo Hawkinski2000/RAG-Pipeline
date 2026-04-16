@@ -16,7 +16,7 @@ from .prompts.faithfulness import build_faithfulness_prompt
 from .tools import compute_faithfulness_tool
 
 
-DATASET_FOLDER = "wiki_eval_v3"
+DATASET_DIR = "wiki_eval_v3"
 TOP_K = 20
 TOP_N = 3
 MODEL = "gpt-5.4-nano"
@@ -96,7 +96,7 @@ def run_eval(num_examples, description):
     trace_file = open(trace_path, "a", encoding="utf-8")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    datasets_dir = os.path.join(script_dir, "datasets", DATASET_FOLDER)
+    datasets_dir = os.path.join(script_dir, "datasets", DATASET_DIR)
 
     client = QdrantClient(url="http://localhost:6333")
     openai_client = OpenAI()
@@ -113,7 +113,7 @@ def run_eval(num_examples, description):
             tqdm(
                 f,
                 total=total,
-                desc=f"Evaluating on {DATASET_FOLDER}",
+                desc=f"Evaluating on {DATASET_DIR}",
                 unit="examples",
             )
         ):
@@ -189,7 +189,7 @@ def run_eval(num_examples, description):
 
     exp_results = {
         "experiment": exp_name,
-        "dataset": DATASET_FOLDER,
+        "dataset": DATASET_DIR,
         "num_examples": num_examples or total,
         "description": description,
         "top_k": TOP_K,

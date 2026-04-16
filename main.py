@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import argparse
 from qdrant_client import QdrantClient
 from openai import OpenAI
 from indexer import build_index
@@ -17,20 +16,18 @@ TOP_N = 3
 
 
 def main():
-    parser = argparse.ArgumentParser(description="RAG pipeline")
-    parser.add_argument("--reindex", action="store_true")
-    args = parser.parse_args()
-
     client = QdrantClient(url="http://localhost:6333")
+
+    if not client.collection_exists("rag-pipeline"):
+        response = input("Index does not exist. Build it now? [y/N]: ").strip().lower()
+
+        if response == "y":
+            build_index()
+        else:
+            print("Aborting...")
+            return
+
     openai_client = OpenAI()
-
-    if args.reindex:
-        if client.collection_exists("rag-pipeline"):
-            client.delete_collection("rag-pipeline")
-
-        build_index(
-            client, openai_client, seed="Large_language_model", max_links=MAX_LINKS
-        )
 
     while True:
         query = input("Enter a question: ")
