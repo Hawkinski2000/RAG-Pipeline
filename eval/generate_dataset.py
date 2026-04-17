@@ -1,14 +1,15 @@
 import os
 import json
 from dotenv import load_dotenv
+from pathlib import Path
 from openai import OpenAI
 from tqdm import tqdm
-from crawler import crawl
 from chunker import split_text
 from .prompts.qa_generation import build_qa_prompt
 from .tools import generate_qa_pair_tool
 
 
+CORPUS_DIR = "wiki_corpus_v1"
 MAX_LINKS = 200
 MODEL = "gpt-5.4-nano"
 PRICING = {"input": 0.20, "output": 1.25}
@@ -46,21 +47,39 @@ def get_next_dataset_path():
     return dataset_path, dataset_name
 
 
+def load_corpus(data_path):
+    with open(data_path, "r", encoding="utf-8") as f:
+        for line in f:
+            yield json.loads(line)
+
+
 def generate_dataset(seed, max_links):
     dataset_path, dataset_name = get_next_dataset_path()
     data_path = os.path.join(dataset_path, "data.jsonl")
     meta_path = os.path.join(dataset_path, "meta.json")
 
-    openai_client = OpenAI()
+    grandparent_dir = Path(__file__).resolve().parent.parent
+    corpus_dir = os.path.join(grandparent_dir, "corpora", CORPUS_DIR)
 
-    corpus = crawl(seed=seed, max_links=max_links)
+    corpus_data_path = os.path.join(corpus_dir, "data.jsonl")
+    corpus_meta_path = os.path.join(corpus_dir, "meta.json")
+
+    with open(corpus_meta_path, "r") as f:
+        num_pages = json.load(f)["num_pages"]
+
+    openai_client = OpenAI()
 
     total_examples = 0
     total_chunks = 0
     total_cost = 0.0
 
     with open(data_path, "w", encoding="utf-8") as f:
-        for page in tqdm(corpus, desc="Generating dataset", unit="pages"):
+        for page in tqdm(
+            load_corpus(corpus_data_path),
+            total=num_pages,
+            desc="Generating dataset",
+            unit="pages",
+        ):
             chunks = split_text(page["text"])
             total_chunks += len(chunks)
 
@@ -107,10 +126,10 @@ def generate_dataset(seed, max_links):
     meta = {
         "name": dataset_name,
         "seed": seed,
-        "num_pages": len(corpus),
+        "num_pages": num_pages,
         "num_examples": total_examples,
         "total_chunks": total_chunks,
-        "avg_chunks_per_page": round(total_chunks / len(corpus), 1),
+        "avg_chunks_per_page": round(total_chunks / num_pages, 1),
     }
 
     with open(meta_path, "w", encoding="utf-8") as f:
