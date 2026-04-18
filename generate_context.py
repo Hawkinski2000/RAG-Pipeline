@@ -4,37 +4,53 @@ import time
 from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
-from crawler import crawl
 from chunker import split_text
 from tools import generate_chunk_context_tool
 from prompts.context import build_context_prompt
 
 
-MAX_LINKS = 200
+CORPUS_DIR = "wiki_corpus_v1"
 MODEL = "gpt-5.4-nano"
 PRICING = {"input": 0.20, "output": 1.25}
 
 load_dotenv()
 
 
-def generate_context(seed, max_links):
+def load_corpus(data_path):
+    with open(data_path, "r", encoding="utf-8") as f:
+        for line in f:
+            yield json.loads(line)
+
+
+def generate_context():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     context_dir = os.path.join(script_dir, "context")
     os.makedirs(context_dir, exist_ok=True)
-
     data_path = os.path.join(context_dir, "data.jsonl")
     meta_path = os.path.join(context_dir, "meta.json")
 
-    openai_client = OpenAI()
+    corpus_dir = os.path.join(script_dir, "corpora", CORPUS_DIR)
+    corpus_data_path = os.path.join(corpus_dir, "data.jsonl")
+    corpus_meta_path = os.path.join(corpus_dir, "meta.json")
 
-    corpus = crawl(seed=seed, max_links=max_links)
+    with open(corpus_meta_path, "r") as f:
+        corpus_meta = json.load(f)
+        num_pages = corpus_meta["num_pages"]
+        seed = corpus_meta["seed"]
+
+    openai_client = OpenAI()
 
     total_pages = 0
     total_chunks = 0
     total_cost = 0.0
 
-    with open(data_path, "a", encoding="utf-8") as f:
-        for page in tqdm(corpus, desc="Generating context", unit="pages"):
+    with open(data_path, "w", encoding="utf-8") as f:
+        for page in tqdm(
+            load_corpus(corpus_data_path),
+            total=num_pages,
+            desc="Generating context",
+            unit="pages",
+        ):
             chunks = split_text(page["text"])
 
             prompt = build_context_prompt(chunks)
@@ -93,7 +109,7 @@ def generate_context(seed, max_links):
 
     meta = {
         "seed": seed,
-        "total_pages": total_pages,
+        "num_pages": total_pages,
         "total_chunks": total_chunks,
         "avg_chunks_per_page": round(total_chunks / total_pages, 1),
     }
@@ -106,4 +122,4 @@ def generate_context(seed, max_links):
 
 
 if __name__ == "__main__":
-    generate_context(seed="Large_language_model", max_links=MAX_LINKS)
+    generate_context()

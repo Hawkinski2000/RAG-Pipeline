@@ -54,7 +54,6 @@ def build_index():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     corpus_dir = os.path.join(script_dir, "corpora", CORPUS_DIR)
-
     data_path = os.path.join(corpus_dir, "data.jsonl")
     meta_path = os.path.join(corpus_dir, "meta.json")
 

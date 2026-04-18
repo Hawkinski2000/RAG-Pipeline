@@ -10,7 +10,6 @@ from .tools import generate_qa_pair_tool
 
 
 CORPUS_DIR = "wiki_corpus_v1"
-MAX_LINKS = 200
 MODEL = "gpt-5.4-nano"
 PRICING = {"input": 0.20, "output": 1.25}
 MAX_OUTPUT_TOKENS = 500
@@ -53,19 +52,20 @@ def load_corpus(data_path):
             yield json.loads(line)
 
 
-def generate_dataset(seed, max_links):
+def generate_dataset():
     dataset_path, dataset_name = get_next_dataset_path()
     data_path = os.path.join(dataset_path, "data.jsonl")
     meta_path = os.path.join(dataset_path, "meta.json")
 
     grandparent_dir = Path(__file__).resolve().parent.parent
     corpus_dir = os.path.join(grandparent_dir, "corpora", CORPUS_DIR)
-
     corpus_data_path = os.path.join(corpus_dir, "data.jsonl")
     corpus_meta_path = os.path.join(corpus_dir, "meta.json")
 
     with open(corpus_meta_path, "r") as f:
-        num_pages = json.load(f)["num_pages"]
+        corpus_meta = json.load(f)
+        num_pages = corpus_meta["num_pages"]
+        seed = corpus_meta["seed"]
 
     openai_client = OpenAI()
 
@@ -126,7 +126,6 @@ def generate_dataset(seed, max_links):
     meta = {
         "name": dataset_name,
         "seed": seed,
-        "num_pages": num_pages,
         "num_examples": total_examples,
         "total_chunks": total_chunks,
         "avg_chunks_per_page": round(total_chunks / num_pages, 1),
@@ -140,4 +139,4 @@ def generate_dataset(seed, max_links):
 
 
 if __name__ == "__main__":
-    generate_dataset(seed="Large_language_model", max_links=MAX_LINKS)
+    generate_dataset()
