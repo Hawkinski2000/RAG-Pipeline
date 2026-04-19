@@ -17,7 +17,7 @@ VECTOR_SIZE = 3072
 COLLECTION_NAME = "rag-pipeline"
 
 
-def load_corpus(data_path):
+def load_line(data_path):
     with open(data_path, "r", encoding="utf-8") as f:
         for line in f:
             yield json.loads(line)
@@ -36,7 +36,7 @@ def build_index():
         )
 
         if response != "y":
-            print("Aborting index build...")
+            print("Aborting index build...\n")
             return
 
         print("Deleting existing collection...")
@@ -60,27 +60,47 @@ def build_index():
     with open(meta_path, "r") as f:
         num_pages = json.load(f)["num_pages"]
 
+    context_path = os.path.join(script_dir, "context", "data.jsonl")
+    context_iter = load_line(context_path)
+
     point_id = 0
     for page in tqdm(
-        load_corpus(data_path),
+        load_line(data_path),
         total=num_pages,
         desc="Generating embeddings",
         unit="pages",
     ):
         chunks = split_text(page["text"])
-        embeddings = get_embeddings_batch(chunks, openai_client)
+
+        texts = []
+        for i, chunk in enumerate(chunks):
+            context_row = next(context_iter)
+
+            assert context_row["title"] == page["title"]
+            assert context_row["chunk_index"] == i
+            assert context_row["chunk"] == chunk
+
+            texts.append(f"Context:\n{context_row['context']}\n\nChunk:\n{chunk}")
+
+        embeddings = get_embeddings_batch(texts, openai_client)
+        assert len(embeddings) == len(texts)
+
         points = [
             PointStruct(
                 id=point_id + i,
-                vector=embeddings[i],
-                payload={"text": chunks[i], "title": page["title"], "chunk_index": i},
+                vector=embedding,
+                payload={
+                    "text": text,
+                    "title": page["title"],
+                    "chunk_index": i,
+                },
             )
-            for i in range(len(chunks))
+            for i, (text, embedding) in enumerate(zip(texts, embeddings))
         ]
         client.upsert(collection_name="rag-pipeline", wait=True, points=points)
         point_id += len(chunks)
 
-    print("Index built.")
+    print("Index built.\n")
 
 
 if __name__ == "__main__":
