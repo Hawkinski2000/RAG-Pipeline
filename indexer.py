@@ -13,7 +13,7 @@ from embedder import get_embeddings_batch
 
 
 CORPUS_DIR = "wiki_corpus_v1"
-VECTOR_SIZE = 3072
+VECTOR_SIZE = 1536
 COLLECTION_NAME = "rag-pipeline"
 
 
