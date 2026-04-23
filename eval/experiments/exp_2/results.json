@@ -1,0 +1,19 @@
+{
+  "experiment": "exp_2",
+  "dataset": "wiki_eval_v4",
+  "num_examples": 200,
+  "description": "add HyDE query expansion",
+  "top_k": 20,
+  "top_n": 3,
+  "summary": {
+    "precision_k": 0.18899999999999997,
+    "recall_k": 0.9400242661044623,
+    "hit_k": 1.0,
+    "mrr_k": 0.9158809523809524,
+    "precision_n": 0.69,
+    "recall_n": 0.6033226636536552,
+    "hit_n": 0.98,
+    "mrr_n": 0.9325,
+    "faithfulness": 0.68955
+  }
+}
