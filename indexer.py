@@ -60,8 +60,8 @@ def build_index():
     with open(meta_path, "r") as f:
         num_pages = json.load(f)["num_pages"]
 
-    context_path = os.path.join(script_dir, "context", "data.jsonl")
-    context_iter = load_line(context_path)
+    # context_path = os.path.join(script_dir, "context", "data.jsonl")
+    # context_iter = load_line(context_path)
 
     point_id = 0
     for page in tqdm(
@@ -74,13 +74,14 @@ def build_index():
 
         texts = []
         for i, chunk in enumerate(chunks):
-            context_row = next(context_iter)
+            # context_row = next(context_iter)
 
-            assert context_row["title"] == page["title"]
-            assert context_row["chunk_index"] == i
-            assert context_row["chunk"] == chunk
+            # assert context_row["title"] == page["title"]
+            # assert context_row["chunk_index"] == i
+            # assert context_row["chunk"] == chunk
 
-            texts.append(f"Context:\n{context_row['context']}\n\nChunk:\n{chunk}")
+            # texts.append(f"Context:\n{context_row['context']}\n\nChunk:\n{chunk}")
+            texts.append(chunk)
 
         embeddings = get_embeddings_batch(texts, openai_client)
         assert len(embeddings) == len(texts)
