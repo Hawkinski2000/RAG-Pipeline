@@ -126,13 +126,15 @@ def run_eval(num_examples, description):
             gt_title = example["title"]
             gt_set = set((gt_title, idx) for idx in example["chunk_indices"])
 
-            query_answer = generate_query_answer(query, openai_client).output_text
-            expanded_query = f"{query}\n{query_answer}"
+            # query_answer = generate_query_answer(query, openai_client).output_text
+            # expanded_query = f"{query}\n{query_answer}"
 
-            retrieved_chunks = query_documents(
-                expanded_query, client, openai_client, TOP_K
-            )
-            reranked_chunks = rerank_chunks(expanded_query, retrieved_chunks, TOP_N)
+            # retrieved_chunks = query_documents(
+            #     expanded_query, client, openai_client, TOP_K
+            # )
+            # reranked_chunks = rerank_chunks(expanded_query, retrieved_chunks, TOP_N)
+            retrieved_chunks = query_documents(query, client, openai_client, TOP_K)
+            reranked_chunks = rerank_chunks(query, retrieved_chunks, TOP_N)
 
             retrieved_metrics = compute_metrics(retrieved_chunks, gt_set)
             reranked_metrics = compute_metrics(reranked_chunks, gt_set)
@@ -160,7 +162,7 @@ def run_eval(num_examples, description):
 
             trace_row = {
                 "query": query,
-                "expanded_query": expanded_query,
+                # "expanded_query": expanded_query,
                 "gt": {
                     "title": example["title"],
                     "chunk_indices": example["chunk_indices"],
