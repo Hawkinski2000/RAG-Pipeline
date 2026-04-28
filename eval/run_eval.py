@@ -160,7 +160,7 @@ def run_eval(num_examples, description):
 
             trace_row = {
                 "query": query,
-                # "expanded_query": expanded_query,
+                "expanded_query": expanded_query,
                 "gt": {
                     "title": example["title"],
                     "chunk_indices": example["chunk_indices"],
