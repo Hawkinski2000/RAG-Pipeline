@@ -81,7 +81,6 @@ def build_index():
             assert context_row["chunk"] == chunk
 
             texts.append(f"Context:\n{context_row['context']}\n\nChunk:\n{chunk}")
-            texts.append(chunk)
 
         embeddings = get_embeddings_batch(texts, openai_client)
         assert len(embeddings) == len(texts)
