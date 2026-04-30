@@ -11,7 +11,6 @@ from tqdm import tqdm
 from chunker import split_text
 from embedder import get_embeddings_batch
 
-
 CORPUS_DIR = "wiki_corpus_v1"
 VECTOR_SIZE = 3072
 COLLECTION_NAME = "rag-pipeline"
