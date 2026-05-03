@@ -1,6 +1,5 @@
 from zeroentropy import ZeroEntropy
 
-
 zclient = ZeroEntropy()
 
 

@@ -10,6 +10,7 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 from tqdm import tqdm
 from chunker import split_text
 from embedder import get_embeddings_batch
+from bm25_retriever import BM25Retriever
 
 CORPUS_DIR = "wiki_corpus_v1"
 VECTOR_SIZE = 3072
@@ -22,7 +23,7 @@ def load_line(data_path):
             yield json.loads(line)
 
 
-def build_index():
+def build_index(bm25):
     print("Building index...")
 
     client = QdrantClient(url="http://localhost:6333")
@@ -63,6 +64,8 @@ def build_index():
     context_iter = load_line(context_path)
 
     point_id = 0
+    bm25_chunks = []
+
     for page in tqdm(
         load_line(data_path),
         total=num_pages,
@@ -97,10 +100,24 @@ def build_index():
             for i, (text, embedding) in enumerate(zip(texts, embeddings))
         ]
         client.upsert(collection_name="rag-pipeline", wait=True, points=points)
+
+        for i, text in enumerate(texts):
+            bm25_chunks.append(
+                {
+                    "id": point_id + i,
+                    "text": text,
+                    "title": page["title"],
+                    "chunk_index": i,
+                }
+            )
+
         point_id += len(chunks)
 
+    print("Building BM25 index...")
+    bm25.build(bm25_chunks)
     print("Index built.\n")
 
 
 if __name__ == "__main__":
-    build_index()
+    bm25 = BM25Retriever()
+    build_index(bm25)

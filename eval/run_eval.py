@@ -10,11 +10,12 @@ from qdrant_client import QdrantClient
 from openai import OpenAI
 from tqdm import tqdm
 from retriever import query_documents
+from bm25_retriever import BM25Retriever
+from fusion import reciprocal_rank_fusion
 from reranker import rerank_chunks
 from generator import generate_response, generate_query_answer
 from .prompts.faithfulness import build_faithfulness_prompt
 from .tools import compute_faithfulness_tool
-
 
 DATASET_DIR = "wiki_eval_v4"
 TOP_K = 20
@@ -99,6 +100,9 @@ def run_eval(num_examples, description):
     datasets_dir = os.path.join(script_dir, "datasets", DATASET_DIR)
 
     client = QdrantClient(url="http://localhost:6333")
+    bm25 = BM25Retriever()
+    bm25.load()
+
     openai_client = OpenAI()
 
     results = []
@@ -129,9 +133,12 @@ def run_eval(num_examples, description):
             query_answer = generate_query_answer(query, openai_client).output_text
             expanded_query = f"{query}\n{query_answer}"
 
-            retrieved_chunks = query_documents(
+            semantic_chunks = query_documents(
                 expanded_query, client, openai_client, TOP_K
             )
+            keyword_chunks = bm25.query(expanded_query, TOP_K)
+
+            retrieved_chunks = reciprocal_rank_fusion(semantic_chunks, keyword_chunks)
             reranked_chunks = rerank_chunks(expanded_query, retrieved_chunks, TOP_N)
 
             retrieved_metrics = compute_metrics(retrieved_chunks, gt_set)

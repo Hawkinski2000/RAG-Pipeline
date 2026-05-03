@@ -10,5 +10,13 @@ def query_documents(query, client, openai_client, top_k=20):
         limit=top_k,
     ).points
 
-    relevant_chunks = [point.payload for point in search_result]
+    relevant_chunks = [
+        {
+            "id": point.id,
+            "text": point.payload["text"],
+            "title": point.payload["title"],
+            "chunk_index": point.payload["chunk_index"],
+        }
+        for point in search_result
+    ]
     return relevant_chunks
