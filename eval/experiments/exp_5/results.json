@@ -1,0 +1,19 @@
+{
+  "experiment": "exp_5",
+  "dataset": "wiki_eval_v4",
+  "num_examples": 200,
+  "description": "implement hybrid retrieval using BM25",
+  "top_k": 20,
+  "top_n": 3,
+  "summary": {
+    "precision_k": 0.14187557446671026,
+    "recall_k": 0.9594352623339898,
+    "hit_k": 1.0,
+    "mrr_k": 0.909672619047619,
+    "precision_n": 0.6616666666666667,
+    "recall_n": 0.5824388076722382,
+    "hit_n": 0.955,
+    "mrr_n": 0.8833333333333333,
+    "faithfulness": 0.6685500000000001
+  }
+}
